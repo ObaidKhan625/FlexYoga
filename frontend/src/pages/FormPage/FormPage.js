@@ -47,6 +47,7 @@ const FormPage = () => {
       timer: 1000,
     });
   };
+
   const handleCloseFailureDialog = () => {
     setOpenFailureDialog(false);
   };
@@ -72,11 +73,12 @@ const FormPage = () => {
     }
     setLoading(false);
   }
+  
   const proceedPayment = () => {
     if(!validateDetails())
       return;
     setLoading(true);
-    const baseURL = 'http://localhost:8000/api/createOrUpdateRecord/';
+    const baseURL = 'https://web-production-27c0.up.railway.app/api/createOrUpdateRecord/';
     fetch(baseURL, 
       {
         method: 'POST',
@@ -132,11 +134,13 @@ const FormPage = () => {
       textColor="black"
       text="Please Wait"
     >
+      {/* Run Confetti on Payment */}
       <Confetti
         run={runPaymentSuccess}
         width={windowDimension.width}
         height={windowDimension.height}
       />
+      {/* Dialog on particular conditions */}
       <Dialog
         open={openSuccessDialog}
         keepMounted
