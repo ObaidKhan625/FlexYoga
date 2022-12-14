@@ -11,6 +11,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
 import swal from "sweetalert";
 
 const FormPage = () => {
@@ -19,7 +20,9 @@ const FormPage = () => {
   const [loading, setLoading] = useState(false);
   const [openSuccessDialog, setOpenSuccessDialog] = useState(false);
   const [openFailureDialog, setOpenFailureDialog] = useState(false);
+  const [openPaymentDialog, setOpenPaymentDialog] = useState(false);
   const [windowDimension, setDimension] = useState({width: window.innerWidth, height: window.innerHeight});
+  const [payPrice, setPayPrice] = useState(500);
 
   const detectSize = () => {
     setDimension({ width: window.innerWidth, height: window.innerHeight });
@@ -32,8 +35,8 @@ const FormPage = () => {
     }
   }, [windowDimension]);
 
-  const handleClickOpenSuccessDialog = () => {
-    setOpenSuccessDialog(true);
+  const handleClosePaymentDialog = () => {
+    setOpenSuccessDialog(false);
   };
 
   const handleCloseSuccessDialog = () => {
@@ -46,7 +49,44 @@ const FormPage = () => {
       button: false,
       timer: 1000,
     });
+    setRunPaymentSuccess(true);
   };
+
+  const closePayment = () => {
+    setLoading(false);
+    setOpenPaymentDialog(false);
+    if(payPrice === 500) {
+      swal({
+        title: "Done!",
+        text: "Payment Done!",
+        icon: "success",
+        dangerMode: true,
+        button: false,
+        timer: 1000,
+      });
+      setRunPaymentSuccess(true);
+    }
+    else {
+      setOpenSuccessDialog(true);
+    }
+    setPayPrice(500);
+  }
+
+  const handlePayment = () => {
+    setLoading(true);
+    // https://web-production-27c0.up.railway.app
+    const baseURL = 'http://localhost:8000/api/completePayment/';
+    fetch(baseURL, 
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ...detailsData, 'firstTime': payPrice === 250 ? true : false })
+      }
+    )
+    .then(resp => closePayment());
+  }
 
   const handleCloseFailureDialog = () => {
     setOpenFailureDialog(false);
@@ -57,19 +97,11 @@ const FormPage = () => {
       setOpenFailureDialog(true);
     }
     else if(resp['discount'] === 'No') {
-      setRunPaymentSuccess(true);
-      swal({
-        title: "Done!",
-        text: "Payment Done!",
-        icon: "success",
-        dangerMode: true,
-        button: false,
-        timer: 1000,
-      });
+      setOpenPaymentDialog(true);
     }
     else {
-      setRunPaymentSuccess(true);
-      handleClickOpenSuccessDialog();
+      setPayPrice(250);
+      setOpenPaymentDialog(true);
     }
     setLoading(false);
   }
@@ -78,7 +110,7 @@ const FormPage = () => {
     if(!validateDetails())
       return;
     setLoading(true);
-    const baseURL = 'https://web-production-27c0.up.railway.app/api/createOrUpdateRecord/';
+    const baseURL = 'http://localhost:8000/api/createOrUpdateRecord/';
     fetch(baseURL, 
       {
         method: 'POST',
@@ -171,6 +203,51 @@ const FormPage = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCloseFailureDialog}>Okay</Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog open={openPaymentDialog} onClose={handleClosePaymentDialog}>
+        <DialogTitle>Enter your details</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            id="account_holder_name"
+            label="Account Holder Name"
+            type="text"
+            fullWidth
+            variant="standard"
+          />
+          <TextField
+            autoFocus
+            margin="dense"
+            id="account_number"
+            label="Account Number"
+            type="number"
+            fullWidth
+            variant="standard"
+          />
+          <TextField
+            autoFocus
+            disabled
+            margin="dense"
+            id="fees"
+            type="text"
+            value={'Rs. '+payPrice}
+            fullWidth
+            variant="standard"
+          />
+          <TextField
+            autoFocus
+            margin="dense"
+            id="cvv"
+            label="CVV"
+            type="password"
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handlePayment}>Proceed</Button>
         </DialogActions>
       </Dialog>
       <Container fixed>
